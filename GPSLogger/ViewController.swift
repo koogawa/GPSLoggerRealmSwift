@@ -56,34 +56,42 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     // MARK: - Private methods
 
     @IBAction func startButtonDidTap(sender: AnyObject) {
+        let realm = try! Realm()
         if isUpdating == true {
             // Stop
             isUpdating = false
             locationManager.stopUpdatingLocation()
             startButton.setTitle("Start", forState: UIControlState.Normal)
+            // Remove a previously registered notification
+            if token != nil {
+                realm.removeNotification(token)
+            }
         }
         else {
             // Start
             isUpdating = true
             locationManager.startUpdatingLocation()
             startButton.setTitle("Stop", forState: UIControlState.Normal)
+            // Add a notification handler for changes
+            token = realm.addNotificationBlock {
+                [weak self] notification, realm in
+                self?.tableView.reloadData()
+            }
         }
     }
 
     @IBAction func clearButtonDidTap(sender: AnyObject) {
         deleteAllLocations()
         locations = loadSavedLocations()
-
         removeAllAnnotations()
+        self.tableView.reloadData()
     }
 
     // Load locations saved in realm at the table view
     private func loadSavedLocations() -> Results<Location> {
         // Get the default Realm
-        let realm = Realm()
-        token = realm.addNotificationBlock { [weak self] notification, realm in
-            self?.tableView.reloadData()
-        }
+        let realm = try! Realm()
+
         // Load recent location objects
         return realm.objects(Location).sorted("createdAt", ascending: false)
     }
@@ -94,39 +102,36 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
         dispatch_async(queue) {
             // Get the default Realm
-            let realm = Realm()
+            let realm = try! Realm()
             realm.beginWrite()
             // Create a Location object
             realm.add(location)
-            realm.commitWrite()
+            try! realm.commitWrite()
         }
     }
 
-    // Delete old objects in a background thread
+    // Delete old (-1 day) objects in a background thread
     private func deleteOldLocations() {
         let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
         dispatch_async(queue) {
             // Get the default Realm
-            let realm = Realm()
+            let realm = try! Realm()
             realm.beginWrite()
             // Delete old Location objects
             var oldLocations = realm.objects(Location).filter(NSPredicate(format:"createdAt < %@", NSDate().dateByAddingTimeInterval(-86400)))
             realm.delete(oldLocations)
-            realm.commitWrite()
+            try! realm.commitWrite()
         }
     }
 
     // Delete all location objects from realm
     private func deleteAllLocations() {
-        let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-        dispatch_async(queue) {
-            // Get the default Realm
-            let realm = Realm()
-            realm.beginWrite()
-            // Delete all Location objects
-            realm.deleteAll()
-            realm.commitWrite()
-        }
+        // Get the default Realm
+        let realm = try! Realm()
+        realm.beginWrite()
+        // Delete all Location objects
+        realm.deleteAll()
+        try! realm.commitWrite()
     }
 
     // Make Location object from CLLocation
