@@ -118,7 +118,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             let realm = try! Realm()
             realm.beginWrite()
             // Delete old Location objects
-            var oldLocations = realm.objects(Location).filter(NSPredicate(format:"createdAt < %@", NSDate().dateByAddingTimeInterval(-86400)))
+            let oldLocations = realm.objects(Location).filter(NSPredicate(format:"createdAt < %@", NSDate().dateByAddingTimeInterval(-86400)))
             realm.delete(oldLocations)
             try! realm.commitWrite()
         }
@@ -136,7 +136,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // Make Location object from CLLocation
     private func makeLocation(rawLocation: CLLocation) -> Location {
-        var location = Location()
+        let location = Location()
         location.latitude = rawLocation.coordinate.latitude
         location.longitude = rawLocation.coordinate.longitude
         location.createdAt = NSDate()
@@ -146,7 +146,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     // Drop pin on the map
     private func dropPin(location: Location) {
         if location.latitude != 0 && location.longitude != 0 {
-            var annotation = MKPointAnnotation()
+            let annotation = MKPointAnnotation()
             annotation.coordinate = CLLocationCoordinate2DMake(location.latitude, location.longitude)
             annotation.title = "\(location.latitude),\(location.longitude)"
             annotation.subtitle = location.createdAt.description
@@ -167,7 +167,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - CLLocationManager delegate
 
-    func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
+    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         if status == CLAuthorizationStatus.NotDetermined {
             locationManager.requestAlwaysAuthorization()
         }
@@ -180,7 +180,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
     }
 
-    func locationManager(manager: CLLocationManager!, didUpdateToLocation newLocation: CLLocation!, fromLocation oldLocation: CLLocation!) {
+    func locationManager(manager: CLLocationManager, didUpdateToLocation newLocation: CLLocation, fromLocation oldLocation: CLLocation) {
 
         if !CLLocationCoordinate2DIsValid(newLocation.coordinate) {
             return
@@ -230,7 +230,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("CellIdentifier", forIndexPath: indexPath) as! UITableViewCell
+        let cell = tableView.dequeueReusableCellWithIdentifier("CellIdentifier", forIndexPath: indexPath) 
 
         let location = locations[indexPath.row]
         cell.textLabel?.text = "\(location.latitude),\(location.longitude)"
