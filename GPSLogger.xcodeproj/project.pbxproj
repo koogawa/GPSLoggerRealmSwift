@@ -14,7 +14,7 @@
 		210923741B6D02A2007A2CEB /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 210923721B6D02A2007A2CEB /* LaunchScreen.xib */; };
 		210923801B6D02A2007A2CEB /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2109237F1B6D02A2007A2CEB /* GPSLoggerTests.swift */; };
 		2109238A1B6D2390007A2CEB /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 210923891B6D2390007A2CEB /* MapKit.framework */; };
-		D7FE3493C235B93D0FDB1C3C /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEEB805F193B1DC9A709B473 /* Pods.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		D7FE3493C235B93D0FDB1C3C /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEEB805F193B1DC9A709B473 /* Pods.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -187,6 +187,7 @@
 		2109235C1B6D02A2007A2CEB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0720;
 				LastUpgradeCheck = 0640;
 				ORGANIZATIONNAME = "Kosuke Ogawa";
 				TargetAttributes = {
