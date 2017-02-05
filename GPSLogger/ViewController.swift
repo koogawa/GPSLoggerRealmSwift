@@ -13,7 +13,7 @@ import RealmSwift
 class Location: Object {
     dynamic var latitude:Double = 0
     dynamic var longitude:Double = 0
-    dynamic var createdAt = NSDate(timeIntervalSince1970: 1)
+    dynamic var createdAt = Date(timeIntervalSince1970: 1)
 }
 
 class ViewController: UIViewController, CLLocationManagerDelegate {
@@ -55,13 +55,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - Private methods
 
-    @IBAction func startButtonDidTap(sender: AnyObject) {
+    @IBAction func startButtonDidTap(_ sender: AnyObject) {
         let realm = try! Realm()
         if isUpdating == true {
             // Stop
             isUpdating = false
             locationManager.stopUpdatingLocation()
-            startButton.setTitle("Start", forState: UIControlState.Normal)
+            startButton.setTitle("Start", for: UIControlState())
             // Remove a previously registered notification
             if token != nil {
                 realm.removeNotification(token)
@@ -71,7 +71,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             // Start
             isUpdating = true
             locationManager.startUpdatingLocation()
-            startButton.setTitle("Stop", forState: UIControlState.Normal)
+            startButton.setTitle("Stop", for: UIControlState())
             // Add a notification handler for changes
             token = realm.addNotificationBlock {
                 [weak self] notification, realm in
@@ -80,7 +80,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
     }
 
-    @IBAction func clearButtonDidTap(sender: AnyObject) {
+    @IBAction func clearButtonDidTap(_ sender: AnyObject) {
         deleteAllLocations()
         locations = loadSavedLocations()
         removeAllAnnotations()
@@ -88,19 +88,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     // Load locations saved in realm at the table view
-    private func loadSavedLocations() -> Results<Location> {
+    fileprivate func loadSavedLocations() -> Results<Location> {
         // Get the default Realm
         let realm = try! Realm()
 
         // Load recent location objects
-        return realm.objects(Location).sorted("createdAt", ascending: false)
+        return realm.objects(Location).sorted(byKeyPath: "createdAt", ascending: false)
     }
 
     // Save object in a background thread
-    private func addCurrentLocation(rowLocation: CLLocation) {
+    fileprivate func addCurrentLocation(_ rowLocation: CLLocation) {
         let location = makeLocation(rowLocation)
-        let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-        dispatch_async(queue) {
+        let queue = DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default)
+        queue.async {
             // Get the default Realm
             let realm = try! Realm()
             realm.beginWrite()
@@ -111,21 +111,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     // Delete old (-1 day) objects in a background thread
-    private func deleteOldLocations() {
-        let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-        dispatch_async(queue) {
+    fileprivate func deleteOldLocations() {
+        let queue = DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default)
+        queue.async {
             // Get the default Realm
             let realm = try! Realm()
             realm.beginWrite()
             // Delete old Location objects
-            let oldLocations = realm.objects(Location).filter(NSPredicate(format:"createdAt < %@", NSDate().dateByAddingTimeInterval(-86400)))
+            let oldLocations = realm.objects(Location).filter(NSPredicate(format:"createdAt < %@", Date().dateByAddingTimeInterval(-86400)))
             realm.delete(oldLocations)
             try! realm.commitWrite()
         }
     }
 
     // Delete all location objects from realm
-    private func deleteAllLocations() {
+    fileprivate func deleteAllLocations() {
         // Get the default Realm
         let realm = try! Realm()
         realm.beginWrite()
@@ -135,30 +135,30 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     // Make Location object from CLLocation
-    private func makeLocation(rawLocation: CLLocation) -> Location {
+    fileprivate func makeLocation(_ rawLocation: CLLocation) -> Location {
         let location = Location()
         location.latitude = rawLocation.coordinate.latitude
         location.longitude = rawLocation.coordinate.longitude
-        location.createdAt = NSDate()
+        location.createdAt = Date()
         return location
     }
 
     // Drop pin on the map
-    private func dropPin(location: Location) {
+    fileprivate func dropPin(_ location: Location) {
         if location.latitude != 0 && location.longitude != 0 {
             let annotation = MKPointAnnotation()
             annotation.coordinate = CLLocationCoordinate2DMake(location.latitude, location.longitude)
             annotation.title = "\(location.latitude),\(location.longitude)"
             annotation.subtitle = location.createdAt.description
 
-            dispatch_async(dispatch_get_main_queue(), {
+            DispatchQueue.main.async(execute: {
                 self.mapView.addAnnotation(annotation)
             })
         }
     }
 
     // Remove all pins on the map
-    private func removeAllAnnotations() {
+    fileprivate func removeAllAnnotations() {
         let annotations = mapView.annotations.filter {
             $0 !== self.mapView.userLocation
         }
@@ -167,20 +167,20 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - CLLocationManager delegate
 
-    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
-        if status == CLAuthorizationStatus.NotDetermined {
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if status == CLAuthorizationStatus.notDetermined {
             locationManager.requestAlwaysAuthorization()
         }
-        else if status == CLAuthorizationStatus.AuthorizedAlways {
+        else if status == CLAuthorizationStatus.authorizedAlways {
             // Center user location on the map
             let span = MKCoordinateSpanMake(0.003, 0.003)
             let region = MKCoordinateRegionMake(mapView.userLocation.coordinate, span)
             mapView.setRegion(region, animated:true)
-            mapView.userTrackingMode = MKUserTrackingMode.FollowWithHeading
+            mapView.userTrackingMode = MKUserTrackingMode.followWithHeading
         }
     }
 
-    func locationManager(manager: CLLocationManager, didUpdateToLocation newLocation: CLLocation, fromLocation oldLocation: CLLocation) {
+    func locationManager(_ manager: CLLocationManager, didUpdateToLocation newLocation: CLLocation, fromLocation oldLocation: CLLocation) {
 
         if !CLLocationCoordinate2DIsValid(newLocation.coordinate) {
             return
@@ -195,7 +195,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - MKMapView delegate
 
-    func mapView(mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
+    func mapView(_ mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
 
         if annotation is MKUserLocation {
             return nil
@@ -203,7 +203,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
         let reuseId = "annotationIdentifier"
 
-        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView?.canShowCallout = true
@@ -219,18 +219,18 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - Table view data source
 
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSectionsInTableView(_ tableView: UITableView) -> Int {
         // Return the number of sections.
         return 1
     }
 
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // Return the number of rows in the section.
         return locations.count
     }
 
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("CellIdentifier", forIndexPath: indexPath) 
+    func tableView(_ tableView: UITableView, cellForRowAtIndexPath indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CellIdentifier", for: indexPath) 
 
         let location = locations[indexPath.row]
         cell.textLabel?.text = "\(location.latitude),\(location.longitude)"
@@ -242,8 +242,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - Table view delegate
 
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+    func tableView(_ tableView: UITableView, didSelectRowAtIndexPath indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }
 
