@@ -11,8 +11,8 @@ import MapKit
 import RealmSwift
 
 class Location: Object {
-    dynamic var latitude:Double = 0
-    dynamic var longitude:Double = 0
+    dynamic var latitude: Double = 0.0
+    dynamic var longitude: Double = 0.0
     dynamic var createdAt = Date(timeIntervalSince1970: 1)
 }
 
@@ -29,21 +29,22 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         // Do any additional setup after loading the view, typically from a nib.
-        locationManager = CLLocationManager()
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 100
+        self.locationManager = CLLocationManager()
+        self.locationManager.delegate = self
+        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        self.locationManager.distanceFilter = 100
 
         // Delete old location objects
-        deleteOldLocations()
+        self.deleteOldLocations()
 
         // Load saved location objects
-        locations = loadSavedLocations()
+        self.locations = self.loadSavedLocations()
 
         // Drop pins
-        for location: Location in locations {
-            dropPin(location)
+        for location in self.locations {
+            dropPin(at: location)
         }
     }
 
@@ -56,28 +57,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     // MARK: - Private methods
 
     @IBAction func startButtonDidTap(_ sender: AnyObject) {
-        let realm = try! Realm()
-        if isUpdating == true {
-            // Stop
-            isUpdating = false
-            locationManager.stopUpdatingLocation()
-            startButton.setTitle("Start", for: UIControlState())
-            // Remove a previously registered notification
-            if token != nil {
-                token.stop()
-            }
-        }
-        else {
-            // Start
-            isUpdating = true
-            locationManager.startUpdatingLocation()
-            startButton.setTitle("Stop", for: UIControlState())
-            // Add a notification handler for changes
-            token = realm.addNotificationBlock {
-                [weak self] notification, realm in
-                self?.tableView.reloadData()
-            }
-        }
+        self.toggleLocationUpdate()
     }
 
     @IBAction func clearButtonDidTap(_ sender: AnyObject) {
@@ -87,7 +67,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         self.tableView.reloadData()
     }
 
-    // Load locations saved in realm at the table view
+    // Load locations stored in realm at the table view
     fileprivate func loadSavedLocations() -> Results<Location> {
         // Get the default Realm
         let realm = try! Realm()
@@ -96,9 +76,36 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         return realm.objects(Location.self).sorted(byKeyPath: "createdAt", ascending: false)
     }
 
+    // Start or Stop location update
+    fileprivate func toggleLocationUpdate() {
+        let realm = try! Realm()
+        if self.isUpdating {
+            // Stop
+            self.isUpdating = false
+            self.locationManager.stopUpdatingLocation()
+            self.startButton.setTitle("Start", for: UIControlState())
+
+            // Remove a previously registered notification
+            if let token = self.token {
+                token.stop()
+            }
+        } else {
+            // Start
+            self.isUpdating = true
+            self.locationManager.startUpdatingLocation()
+            self.startButton.setTitle("Stop", for: UIControlState())
+
+            // Add a notification handler for changes
+            self.token = realm.addNotificationBlock {
+                [weak self] notification, realm in
+                self?.tableView.reloadData()
+            }
+        }
+    }
+
     // Save object in a background thread
     fileprivate func addCurrentLocation(_ rowLocation: CLLocation) {
-        let location = makeLocation(rowLocation)
+        let location = makeLocation(rawLocation: rowLocation)
         DispatchQueue.main.async {
             // Get the default Realm
             let realm = try! Realm()
@@ -114,11 +121,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         DispatchQueue.main.async {
             // Get the default Realm
             let realm = try! Realm()
-            realm.beginWrite()
-            // Delete old Location objects
+
+            // Old Locations stored in Realm
             let oldLocations = realm.objects(Location.self).filter(NSPredicate(format:"createdAt < %@", NSDate().addingTimeInterval(-86400)))
-            realm.delete(oldLocations)
-            try! realm.commitWrite()
+
+            // Delete an object with a transaction
+            try! realm.write {
+                realm.delete(oldLocations)
+            }
         }
     }
 
@@ -126,14 +136,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     fileprivate func deleteAllLocations() {
         // Get the default Realm
         let realm = try! Realm()
-        realm.beginWrite()
-        // Delete all Location objects
-        realm.deleteAll()
-        try! realm.commitWrite()
+
+        // Delete all objects from the realm
+        try! realm.write {
+            realm.deleteAll()
+        }
     }
 
     // Make Location object from CLLocation
-    fileprivate func makeLocation(_ rawLocation: CLLocation) -> Location {
+    fileprivate func makeLocation(rawLocation: CLLocation) -> Location {
         let location = Location()
         location.latitude = rawLocation.coordinate.latitude
         location.longitude = rawLocation.coordinate.longitude
@@ -142,7 +153,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     // Drop pin on the map
-    fileprivate func dropPin(_ location: Location) {
+    fileprivate func dropPin(at location: Location) {
         if location.latitude != 0 && location.longitude != 0 {
             let annotation = MKPointAnnotation()
             annotation.coordinate = CLLocationCoordinate2DMake(location.latitude, location.longitude)
@@ -157,10 +168,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // Remove all pins on the map
     fileprivate func removeAllAnnotations() {
-        let annotations = mapView.annotations.filter {
+        let annotations = self.mapView.annotations.filter {
             $0 !== self.mapView.userLocation
         }
-        mapView.removeAnnotations(annotations)
+        self.mapView.removeAnnotations(annotations)
     }
 
     // MARK: - CLLocationManager delegate
@@ -172,9 +183,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         else if status == CLAuthorizationStatus.authorizedAlways {
             // Center user location on the map
             let span = MKCoordinateSpanMake(0.003, 0.003)
-            let region = MKCoordinateRegionMake(mapView.userLocation.coordinate, span)
-            mapView.setRegion(region, animated:true)
-            mapView.userTrackingMode = MKUserTrackingMode.followWithHeading
+            let region = MKCoordinateRegionMake(self.mapView.userLocation.coordinate, span)
+            self.mapView.setRegion(region, animated:true)
+            self.mapView.userTrackingMode = MKUserTrackingMode.followWithHeading
         }
     }
 
@@ -187,10 +198,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             return
         }
 
-        addCurrentLocation(newLocation)
+        self.addCurrentLocation(newLocation)
 
-        let location = makeLocation(newLocation)
-        dropPin(location)
+        let location = makeLocation(rawLocation: newLocation)
+        dropPin(at: location)
     }
 
 
@@ -204,7 +215,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
         let reuseId = "annotationIdentifier"
 
-        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
+        var pinView = self.mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView?.canShowCallout = true
