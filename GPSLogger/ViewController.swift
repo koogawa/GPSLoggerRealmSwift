@@ -39,12 +39,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         // Delete old location objects
         self.deleteOldLocations()
 
-        // Load saved location objects
-        self.locations = self.loadSavedLocations()
+        // Load stored location objects
+        self.locations = self.loadStoredLocations()
 
         // Drop pins
         for location in self.locations {
-            dropPin(at: location)
+            self.dropPin(at: location)
         }
     }
 
@@ -61,14 +61,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
 
     @IBAction func clearButtonDidTap(_ sender: AnyObject) {
-        deleteAllLocations()
-        locations = loadSavedLocations()
-        removeAllAnnotations()
+        self.deleteAllLocations()
+        self.locations = self.loadStoredLocations()
+        self.removeAllAnnotations()
         self.tableView.reloadData()
     }
 
     // Load locations stored in realm at the table view
-    fileprivate func loadSavedLocations() -> Results<Location> {
+    fileprivate func loadStoredLocations() -> Results<Location> {
         // Get the default Realm
         let realm = try! Realm()
 
@@ -235,13 +235,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // Return the number of rows in the section.
-        return locations.count
+        return self.locations.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAtIndexPath indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CellIdentifier", for: indexPath) 
 
-        let location = locations[indexPath.row]
+        let location = self.locations[indexPath.row]
         cell.textLabel?.text = "\(location.latitude),\(location.longitude)"
         cell.detailTextLabel?.text = location.createdAt.description
 
