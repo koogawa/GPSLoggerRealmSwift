@@ -106,10 +106,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     // Save object in a background thread
     fileprivate func addCurrentLocation(_ rowLocation: CLLocation) {
         let location = makeLocation(rawLocation: rowLocation)
-        DispatchQueue.main.async {
+        DispatchQueue.global().async {
             // Get the default Realm
             let realm = try! Realm()
             realm.beginWrite()
+
             // Create a Location object
             realm.add(location)
             try! realm.commitWrite()
@@ -118,7 +119,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // Delete old (-1 day) objects in a background thread
     fileprivate func deleteOldLocations() {
-        DispatchQueue.main.async {
+        DispatchQueue.global().async {
             // Get the default Realm
             let realm = try! Realm()
 
@@ -159,10 +160,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             annotation.coordinate = CLLocationCoordinate2DMake(location.latitude, location.longitude)
             annotation.title = "\(location.latitude),\(location.longitude)"
             annotation.subtitle = location.createdAt.description
-
-            DispatchQueue.main.async(execute: {
-                self.mapView.addAnnotation(annotation)
-            })
+            self.mapView.addAnnotation(annotation)
         }
     }
 
