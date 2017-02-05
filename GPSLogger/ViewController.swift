@@ -64,7 +64,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             startButton.setTitle("Start", for: UIControlState())
             // Remove a previously registered notification
             if token != nil {
-                realm.removeNotification(token)
+                token.stop()
             }
         }
         else {
@@ -93,14 +93,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         let realm = try! Realm()
 
         // Load recent location objects
-        return realm.objects(Location).sorted(byKeyPath: "createdAt", ascending: false)
+        return realm.objects(Location.self).sorted(byKeyPath: "createdAt", ascending: false)
     }
 
     // Save object in a background thread
     fileprivate func addCurrentLocation(_ rowLocation: CLLocation) {
         let location = makeLocation(rowLocation)
-        let queue = DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default)
-        queue.async {
+        DispatchQueue.main.async {
             // Get the default Realm
             let realm = try! Realm()
             realm.beginWrite()
@@ -112,13 +111,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // Delete old (-1 day) objects in a background thread
     fileprivate func deleteOldLocations() {
-        let queue = DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default)
-        queue.async {
+        DispatchQueue.main.async {
             // Get the default Realm
             let realm = try! Realm()
             realm.beginWrite()
             // Delete old Location objects
-            let oldLocations = realm.objects(Location).filter(NSPredicate(format:"createdAt < %@", Date().dateByAddingTimeInterval(-86400)))
+            let oldLocations = realm.objects(Location.self).filter(NSPredicate(format:"createdAt < %@", NSDate().addingTimeInterval(-86400)))
             realm.delete(oldLocations)
             try! realm.commitWrite()
         }
@@ -180,7 +178,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateToLocation newLocation: CLLocation, fromLocation oldLocation: CLLocation) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations:[CLLocation]) {
+        guard let newLocation = locations.last else {
+            return
+        }
 
         if !CLLocationCoordinate2DIsValid(newLocation.coordinate) {
             return
