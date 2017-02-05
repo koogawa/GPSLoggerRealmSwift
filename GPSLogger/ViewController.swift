@@ -103,17 +103,16 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
     }
 
-    // Save object in a background thread
+    // Store object
     fileprivate func addCurrentLocation(_ rowLocation: CLLocation) {
         let location = makeLocation(rawLocation: rowLocation)
-        DispatchQueue.global().async {
-            // Get the default Realm
-            let realm = try! Realm()
-            realm.beginWrite()
 
-            // Create a Location object
+        // Get the default Realm
+        let realm = try! Realm()
+
+        // Add to the Realm inside a transaction
+        try! realm.write {
             realm.add(location)
-            try! realm.commitWrite()
         }
     }
 
