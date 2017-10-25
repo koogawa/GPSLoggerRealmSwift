@@ -11,9 +11,9 @@ import MapKit
 import RealmSwift
 
 class Location: Object {
-    dynamic var latitude: Double = 0.0
-    dynamic var longitude: Double = 0.0
-    dynamic var createdAt = Date(timeIntervalSince1970: 1)
+    @objc dynamic var latitude: Double = 0.0
+    @objc dynamic var longitude: Double = 0.0
+    @objc dynamic var createdAt = Date(timeIntervalSince1970: 1)
 }
 
 class ViewController: UIViewController, CLLocationManagerDelegate {
@@ -87,7 +87,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
             // Remove a previously registered notification
             if let token = self.token {
-                token.stop()
+                token.invalidate()
             }
         } else {
             // Start
@@ -96,7 +96,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             self.startButton.setTitle("Stop", for: UIControlState())
 
             // Add a notification handler for changes
-            self.token = realm.addNotificationBlock {
+            self.token = realm.observe {
                 [weak self] notification, realm in
                 self?.tableView.reloadData()
             }
