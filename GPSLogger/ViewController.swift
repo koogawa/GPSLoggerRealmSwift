@@ -16,7 +16,7 @@ class Location: Object {
     @objc dynamic var createdAt = Date(timeIntervalSince1970: 1)
 }
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CLLocationManagerDelegate {
+class ViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var startButton: UIButton!
@@ -170,8 +170,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
         self.mapView.removeAnnotations(annotations)
     }
+}
 
-    // MARK: - CLLocationManager delegate
+// MARK: - CLLocationManager delegate
+extension ViewController: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if status == CLAuthorizationStatus.notDetermined {
@@ -200,12 +202,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let location = makeLocation(rawLocation: newLocation)
         dropPin(at: location)
     }
+}
 
+// MARK: - MKMapView delegate
+extension ViewController: MKMapViewDelegate {
 
-    // MARK: - MKMapView delegate
-
-    func mapView(_ mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
-
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation {
             return nil
         }
@@ -224,9 +226,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
 
         return pinView
     }
+}
 
-
-    // MARK: - Table view data source
+// MARK: - Table view data source
+extension ViewController: UITableViewDataSource {
 
     func numberOfSections(in tableView: UITableView) -> Int {
         // Return the number of sections.
@@ -247,12 +250,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
 
         return cell
     }
+}
 
-
-    // MARK: - Table view delegate
-
+// MARK: - Table view delegate
+extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
-
