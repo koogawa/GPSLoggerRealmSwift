@@ -16,7 +16,7 @@ class Location: Object {
     @objc dynamic var createdAt = Date(timeIntervalSince1970: 1)
 }
 
-class ViewController: UIViewController, CLLocationManagerDelegate {
+class ViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var startButton: UIButton!
@@ -83,7 +83,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             // Stop
             self.isUpdating = false
             self.locationManager.stopUpdatingLocation()
-            self.startButton.setTitle("Start", for: UIControlState())
+            self.startButton.setTitle("Start", for: UIControl.State())
 
             // Remove a previously registered notification
             if let token = self.token {
@@ -93,7 +93,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             // Start
             self.isUpdating = true
             self.locationManager.startUpdatingLocation()
-            self.startButton.setTitle("Stop", for: UIControlState())
+            self.startButton.setTitle("Stop", for: UIControl.State())
 
             // Add a notification handler for changes
             self.token = realm.observe {
@@ -170,8 +170,10 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
         self.mapView.removeAnnotations(annotations)
     }
+}
 
-    // MARK: - CLLocationManager delegate
+// MARK: - CLLocationManager delegate
+extension ViewController: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if status == CLAuthorizationStatus.notDetermined {
@@ -179,8 +181,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
         else if status == CLAuthorizationStatus.authorizedAlways {
             // Center user location on the map
-            let span = MKCoordinateSpanMake(0.003, 0.003)
-            let region = MKCoordinateRegionMake(self.mapView.userLocation.coordinate, span)
+            let span = MKCoordinateSpan.init(latitudeDelta: 0.003, longitudeDelta: 0.003)
+            let region = MKCoordinateRegion.init(center: self.mapView.userLocation.coordinate, span: span)
             self.mapView.setRegion(region, animated:true)
             self.mapView.userTrackingMode = MKUserTrackingMode.followWithHeading
         }
@@ -200,12 +202,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         let location = makeLocation(rawLocation: newLocation)
         dropPin(at: location)
     }
+}
 
+// MARK: - MKMapView delegate
+extension ViewController: MKMapViewDelegate {
 
-    // MARK: - MKMapView delegate
-
-    func mapView(_ mapView: MKMapView!, viewForAnnotation annotation: MKAnnotation!) -> MKAnnotationView! {
-
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation {
             return nil
         }
@@ -224,11 +226,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
         return pinView
     }
+}
 
+// MARK: - Table view data source
+extension ViewController: UITableViewDataSource {
 
-    // MARK: - Table view data source
-
-    func numberOfSectionsInTableView(_ tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         // Return the number of sections.
         return 1
     }
@@ -238,7 +241,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         return self.locations.count
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAtIndexPath indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CellIdentifier", for: indexPath) 
 
         let location = self.locations[indexPath.row]
@@ -247,12 +250,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
         return cell
     }
+}
 
-
-    // MARK: - Table view delegate
-
-    func tableView(_ tableView: UITableView, didSelectRowAtIndexPath indexPath: IndexPath) {
+// MARK: - Table view delegate
+extension ViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
-

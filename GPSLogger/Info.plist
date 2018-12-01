@@ -22,7 +22,11 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app will record your location information</string>
 	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app will record your location information</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app will record your location information</string>
 	<key>UIBackgroundModes</key>
 	<array>
