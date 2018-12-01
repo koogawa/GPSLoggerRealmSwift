@@ -83,7 +83,7 @@ class ViewController: UIViewController {
             // Stop
             self.isUpdating = false
             self.locationManager.stopUpdatingLocation()
-            self.startButton.setTitle("Start", for: UIControlState())
+            self.startButton.setTitle("Start", for: UIControl.State())
 
             // Remove a previously registered notification
             if let token = self.token {
@@ -93,7 +93,7 @@ class ViewController: UIViewController {
             // Start
             self.isUpdating = true
             self.locationManager.startUpdatingLocation()
-            self.startButton.setTitle("Stop", for: UIControlState())
+            self.startButton.setTitle("Stop", for: UIControl.State())
 
             // Add a notification handler for changes
             self.token = realm.observe {
@@ -181,8 +181,8 @@ extension ViewController: CLLocationManagerDelegate {
         }
         else if status == CLAuthorizationStatus.authorizedAlways {
             // Center user location on the map
-            let span = MKCoordinateSpanMake(0.003, 0.003)
-            let region = MKCoordinateRegionMake(self.mapView.userLocation.coordinate, span)
+            let span = MKCoordinateSpan.init(latitudeDelta: 0.003, longitudeDelta: 0.003)
+            let region = MKCoordinateRegion.init(center: self.mapView.userLocation.coordinate, span: span)
             self.mapView.setRegion(region, animated:true)
             self.mapView.userTrackingMode = MKUserTrackingMode.followWithHeading
         }
