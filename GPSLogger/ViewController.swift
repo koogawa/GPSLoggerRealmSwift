@@ -16,7 +16,7 @@ class Location: Object {
     @objc dynamic var createdAt = Date(timeIntervalSince1970: 1)
 }
 
-class ViewController: UIViewController, CLLocationManagerDelegate {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, CLLocationManagerDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var startButton: UIButton!
@@ -228,7 +228,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - Table view data source
 
-    func numberOfSectionsInTableView(_ tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         // Return the number of sections.
         return 1
     }
@@ -238,7 +238,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         return self.locations.count
     }
 
-    func tableView(_ tableView: UITableView, cellForRowAtIndexPath indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CellIdentifier", for: indexPath) 
 
         let location = self.locations[indexPath.row]
@@ -251,7 +251,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
 
     // MARK: - Table view delegate
 
-    func tableView(_ tableView: UITableView, didSelectRowAtIndexPath indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
